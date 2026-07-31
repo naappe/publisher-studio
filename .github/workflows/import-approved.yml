@@ -1,0 +1,42 @@
+name: Restore approved Publisher Studio
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/import-approved.yml
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout target
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout approved source
+        uses: actions/checkout@v4
+        with:
+          repository: naappe/inventory
+          ref: fix/all-template-text-movable
+          path: approved-source
+
+      - name: Restore approved design
+        run: |
+          rm -rf src
+          cp approved-source/index.html ./index.html
+          cp -R approved-source/src ./src
+          rm -rf approved-source
+          touch .nojekyll
+
+      - name: Commit restored application
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html src .nojekyll
+          git diff --cached --quiet || git commit -m "Restore approved Publisher Studio design"
+          git push
