@@ -1,80 +1,60 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#111827" />
-  <title>Publisher Studio</title>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <style>
-    :root{--bg:#e9edf3;--panel:#fff;--ink:#111827;--muted:#687386;--line:#d8dee8;--brand:#2563eb;--dark:#0f172a;--radius:12px}
-    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--ink);overflow:hidden}
-    button,input,select{font:inherit}.app{height:100vh;display:grid;grid-template-rows:58px 1fr}.topbar{display:flex;align-items:center;gap:10px;padding:0 14px;background:var(--dark);color:#fff;border-bottom:1px solid #263247}.brand{font-weight:700;letter-spacing:.2px;margin-right:8px}.topbar button,.tool-btn{height:36px;border:1px solid #344158;background:#182238;color:#fff;border-radius:8px;padding:0 12px;cursor:pointer}.topbar button:hover,.tool-btn:hover{background:#24314a}.topbar .primary{background:var(--brand);border-color:var(--brand)}.spacer{flex:1}.workspace{min-height:0;display:grid;grid-template-columns:260px 1fr 280px}.panel{background:var(--panel);min-height:0;overflow:auto}.left{border-right:1px solid var(--line)}.right{border-left:1px solid var(--line)}.section{padding:16px;border-bottom:1px solid var(--line)}.section h3{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 12px}.stack{display:grid;gap:8px}.btn{height:40px;border:1px solid var(--line);background:#fff;border-radius:9px;padding:0 12px;text-align:left;cursor:pointer}.btn:hover{background:#f5f7fa}.template{padding:12px;border:1px solid var(--line);border-radius:10px;cursor:pointer;background:#f8fafc}.template b{display:block;font-size:14px}.template span{font-size:12px;color:var(--muted)}
-    .stage-wrap{min-width:0;min-height:0;display:grid;grid-template-rows:48px 1fr;background:#cfd6df}.stage-toolbar{display:flex;align-items:center;justify-content:center;gap:8px;background:#f7f9fc;border-bottom:1px solid var(--line)}.stage-scroll{overflow:auto;display:grid;place-items:center;padding:40px}.canvas{position:relative;width:720px;height:720px;background:#fff;box-shadow:0 18px 50px rgba(15,23,42,.18);overflow:hidden;transform-origin:center}.canvas::after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 0 1px rgba(15,23,42,.08)}
-    .element{position:absolute;min-width:40px;min-height:24px;cursor:move;user-select:none}.element.selected{outline:2px solid var(--brand);outline-offset:2px}.text-el{padding:4px;white-space:pre-wrap}.image-el img{width:100%;height:100%;object-fit:cover;display:block}.resize{position:absolute;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid var(--brand);right:-8px;bottom:-8px;cursor:nwse-resize;display:none}.selected .resize{display:block}.field{display:grid;gap:6px;margin-bottom:12px}.field label{font-size:12px;color:var(--muted)}.field input,.field select{height:38px;border:1px solid var(--line);border-radius:8px;padding:0 10px;background:#fff;width:100%}.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.layers{display:grid;gap:6px}.layer{display:flex;align-items:center;justify-content:space-between;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;cursor:pointer}.layer.active{border-color:var(--brand);background:#eff6ff}.empty{font-size:13px;color:var(--muted)}
-    @media(max-width:980px){.workspace{grid-template-columns:210px 1fr}.right{display:none}.canvas{width:600px;height:600px}}@media(max-width:720px){.workspace{grid-template-columns:1fr}.left{display:none}.topbar{overflow:auto}.canvas{width:520px;height:520px}}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1d31">
+<meta name="app-version" content="4.0.0">
+<title>Naappe Publisher Studio v4</title>
+<link rel="stylesheet" href="./src/v3-styles.css?v=4.0.0">
 </head>
 <body>
-<div class="app">
-  <header class="topbar">
-    <div class="brand">Publisher Studio</div>
-    <button id="newBtn">New</button><button id="undoBtn">Undo</button><button id="redoBtn">Redo</button>
-    <div class="spacer"></div><button id="saveBtn">Save Project</button><button class="primary" id="exportBtn">Export PNG</button>
-  </header>
-  <main class="workspace">
-    <aside class="panel left">
-      <div class="section"><h3>Add</h3><div class="stack"><button class="btn" id="addHeading">Add heading</button><button class="btn" id="addText">Add body text</button><button class="btn" id="addShape">Add shape</button><button class="btn" id="uploadBtn">Upload image</button><input id="fileInput" type="file" accept="image/*" hidden></div></div>
-      <div class="section"><h3>Templates</h3><div class="stack"><div class="template" data-template="breaking"><b>Breaking News</b><span>High-impact newsroom card</span></div><div class="template" data-template="statement"><b>Statement</b><span>Clean official announcement</span></div><div class="template" data-template="interview"><b>Editorial Interview</b><span>Photo-led quote composition</span></div><div class="template" data-template="nation"><b>NationChat</b><span>Social conversation format</span></div></div></div>
-    </aside>
-    <section class="stage-wrap">
-      <div class="stage-toolbar"><button class="tool-btn" id="zoomOut">−</button><span id="zoomLabel">100%</span><button class="tool-btn" id="zoomIn">+</button><button class="tool-btn" id="fitBtn">Fit</button></div>
-      <div class="stage-scroll" id="stageScroll"><div class="canvas" id="canvas"></div></div>
-    </section>
-    <aside class="panel right">
-      <div class="section"><h3>Inspector</h3><div id="inspectorEmpty" class="empty">Select an element to edit it.</div><div id="inspector" hidden>
-        <div class="field"><label>Content</label><input id="contentInput"></div>
-        <div class="row"><div class="field"><label>X</label><input id="xInput" type="number"></div><div class="field"><label>Y</label><input id="yInput" type="number"></div></div>
-        <div class="row"><div class="field"><label>Width</label><input id="wInput" type="number"></div><div class="field"><label>Height</label><input id="hInput" type="number"></div></div>
-        <div class="field"><label>Font size</label><input id="fontInput" type="number" min="8" max="200"></div>
-        <div class="field"><label>Text / fill color</label><input id="colorInput" type="color"></div>
-        <button class="btn" id="deleteBtn">Delete selected</button>
-      </div></div>
-      <div class="section"><h3>Layers</h3><div class="layers" id="layers"></div></div>
-    </aside>
-  </main>
+<div class="app-shell">
+<header class="topbar">
+  <div class="brand"><span class="brand-word">naappe</span><strong>Publisher Studio</strong><small>v4.0</small></div>
+  <div class="top-actions">
+    <button id="undo" disabled>↶ Undo</button><button id="redo" disabled>↷ Redo</button>
+    <button id="duplicateElement">⧉ Duplicate</button><button id="deleteElement">⌫ Delete</button>
+    <button id="bringForward">Bring Forward</button><button id="sendBackward">Send Backward</button>
+    <button id="toggleLock">Lock</button><button id="toggleVisibility">Hide</button>
+  </div>
+  <div class="publish-actions"><button id="newProject">New</button><button id="saveProject">Save</button><label class="button">Load<input id="loadProject" type="file" accept=".json,application/json"></label><select id="exportFormat"><option value="png">PNG</option><option value="jpeg">JPEG</option><option value="webp">WebP</option></select><button id="exportImage" class="export">Export</button></div>
+</header>
+
+<div class="editor-grid">
+<aside class="left-panel">
+  <section><label class="section-label">Template</label><select id="templateSelect"><option value="nationchat">NationChat</option><option value="interview">Editorial Interview</option><option value="breaking">Breaking News</option><option value="statement">Statement</option></select><div class="template-buttons" hidden><button data-template="nationchat"></button><button data-template="interview"></button><button data-template="breaking"></button><button data-template="statement"></button></div></section>
+  <section><label class="section-label">Background image</label><label class="image-drop"><span>Change image</span><input id="imageUpload" type="file" accept="image/*"></label><div class="tool-row"><button id="fitImage">Fit</button><button id="fillImage">Fill</button><button id="resetImage">Reset</button></div></section>
+  <section><label class="section-label">Image adjust</label><label class="range-field">Brightness<input id="brightness" type="range" min="0.5" max="1.5" step="0.01" value="1"><output id="brightnessValue">100%</output></label><label class="range-field">Contrast<input id="contrast" type="range" min="0.5" max="1.8" step="0.01" value="1"><output id="contrastValue">100%</output></label><label class="range-field">Overlay<input id="overlayOpacity" type="range" min="0" max="1" step="0.01" value="0.96"><output id="overlayOpacityValue">96%</output></label></section>
+  <section class="layers-section"><div class="section-head"><label class="section-label">Layers</label><span id="layerCount">0</span></div><div id="layerList" class="layer-list"></div><button class="add-wide" data-add="text">＋ Add element</button></section>
+  <section class="hidden-compat"><input id="headline" value="BREAKING NEWS"><textarea id="quote" dir="rtl">މިއީ ނައްޕެ ޕަބްލިޝަރ ސްޓޫޑިއޯގެ ކުއިކް މޯޑެވެ.</textarea><input id="speaker" dir="rtl" value="ނޭޝަން ޗެޓް"><input id="role" value="EDITORIAL"><input id="source" value="NAAPPE"><input id="accent" type="color" value="#16a36f"><input id="background" type="color" value="#ffffff"><select id="textAlign"><option value="center">Center</option></select><input id="fontBias" type="range" min=".75" max="1.25" value="1"><output id="fontBiasValue">100%</output><input id="overlayStart" type="range" min=".2" max=".8" value=".43"><output id="overlayStartValue">43%</output><input id="showSafeArea" type="checkbox"><select id="brandPack"><option value="naappe">Naappe</option></select><input id="brandName" value="naappe"><span id="templateStatus"></span><span id="outputStatus"></span><span id="zoomValue"></span><span id="layoutStatus"></span><pre id="debugState"></pre><div id="recentProjects"></div></section>
+</aside>
+
+<main class="workspace">
+  <div class="add-toolbar"><span>Add element</span><button data-add="text">T Text</button><button data-add="circle">○ Circle</button><button data-add="cross">× Cross</button><button data-add="rectangle">▭ Rectangle</button><button data-add="line">— Line</button></div>
+  <div class="stage"><div class="canvas-wrap" id="canvasWrap"><canvas id="publisherCanvas"></canvas><canvas id="elementCanvas"></canvas></div></div>
+  <div class="workspace-footer"><div class="tip">Click any text or element on the canvas to select and edit it freely.</div><div class="zoom-controls"><button id="zoomOut">−</button><span id="canvasInfo">1080 × 1350</span><button id="zoomIn">＋</button></div></div>
+</main>
+
+<aside class="right-panel">
+  <div id="emptyInspector" class="empty-state"><strong>Select an element</strong><p>Click text, a shape, or a layer to edit its properties.</p></div>
+  <div id="elementInspector" hidden>
+    <h2 id="inspectorTitle">Text properties</h2>
+    <label class="field text-prop">Content<textarea id="elementText" dir="auto"></textarea></label>
+    <label class="field text-prop">Font family<select id="elementFont"><option value="Noto Sans Thaana">Noto Sans Thaana</option><option value="Faruma">Faruma</option><option value="MV Waheed">MV Waheed</option><option value="Arial">Arial</option><option value="Georgia">Georgia</option><option value="Inter">Inter</option></select></label>
+    <div class="two-col text-prop"><label class="field">Weight<select id="elementWeight"><option value="400">Regular</option><option value="500">Medium</option><option value="600">Semi Bold</option><option value="700">Bold</option><option value="800">Extra Bold</option></select></label><label class="field">Size<input id="elementFontSize" type="number" min="12" max="240"></label></div>
+    <label class="field">Color<input id="elementColor" type="color"></label>
+    <div class="text-prop"><label class="field">Alignment<select id="elementAlign"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label><label class="range-field">Line height<input id="elementLineHeight" type="range" min="0.8" max="2" step="0.05"><output id="lineHeightValue"></output></label><label class="range-field">Letter spacing<input id="elementLetterSpacing" type="range" min="-5" max="20" step="1"><output id="letterSpacingValue"></output></label></div>
+    <label class="field">Background<select id="elementBackground"><option value="transparent">Transparent</option><option value="#ffffff">White</option><option value="#0b1d31">Navy</option><option value="#16a36f">Green</option></select></label>
+    <div class="two-col"><label class="field">Width / size<input id="elementSize" type="number" min="20" max="1000"></label><label class="field">Rotation<input id="elementRotation" type="number" min="-360" max="360"></label></div>
+    <label class="range-field">Opacity<input id="elementOpacity" type="range" min="0" max="1" step="0.05"><output id="opacityValue"></output></label>
+    <div class="action-grid"><button id="duplicateElement2">Duplicate</button><button id="deleteElement2" class="danger">Delete</button></div>
+  </div>
+</aside>
 </div>
-<script>
-const canvas=document.getElementById('canvas'), layers=document.getElementById('layers');
-let selected=null, zoom=1, history=[], future=[];
-const uid=()=>Math.random().toString(36).slice(2,9);
-function snapshot(){history.push(canvas.innerHTML);if(history.length>40)history.shift();future=[]}
-function restore(html){canvas.innerHTML=html;bindAll();select(null)}
-function addElement(type,opts={}){snapshot();const el=document.createElement('div');el.className='element '+(type==='text'?'text-el':type==='image'?'image-el':'');el.dataset.id=uid();el.dataset.type=type;el.style.left=(opts.x??120)+'px';el.style.top=(opts.y??120)+'px';el.style.width=(opts.w??320)+'px';el.style.height=(opts.h??80)+'px';el.style.zIndex=canvas.children.length+1;
-if(type==='text'){el.textContent=opts.text??'Your text';el.style.fontSize=(opts.font??42)+'px';el.style.fontWeight=opts.weight??700;el.style.color=opts.color??'#111827';el.style.lineHeight='1.1'}
-if(type==='shape'){el.style.background=opts.color??'#2563eb';el.style.borderRadius=opts.radius??'18px'}
-if(type==='image'){el.innerHTML='<img alt="Uploaded image">';el.querySelector('img').src=opts.src}
-el.insertAdjacentHTML('beforeend','<span class="resize"></span>');canvas.appendChild(el);bind(el);select(el);renderLayers()}
-function bindAll(){canvas.querySelectorAll('.element').forEach(bind);renderLayers()}
-function bind(el){el.onpointerdown=e=>{if(e.target.classList.contains('resize'))return;select(el);const r=canvas.getBoundingClientRect(),sx=e.clientX,sy=e.clientY,ox=parseFloat(el.style.left),oy=parseFloat(el.style.top);el.setPointerCapture(e.pointerId);let moved=false;el.onpointermove=ev=>{moved=true;el.style.left=ox+(ev.clientX-sx)/zoom+'px';el.style.top=oy+(ev.clientY-sy)/zoom+'px';syncInspector()};el.onpointerup=()=>{el.onpointermove=null;el.onpointerup=null;if(moved)snapshotAfter();renderLayers()}};
-const h=el.querySelector('.resize');h.onpointerdown=e=>{e.stopPropagation();select(el);const sx=e.clientX,sy=e.clientY,ow=el.offsetWidth,oh=el.offsetHeight;h.setPointerCapture(e.pointerId);h.onpointermove=ev=>{el.style.width=Math.max(40,ow+(ev.clientX-sx)/zoom)+'px';el.style.height=Math.max(24,oh+(ev.clientY-sy)/zoom)+'px';syncInspector()};h.onpointerup=()=>{h.onpointermove=null;h.onpointerup=null;snapshotAfter()}}}
-function snapshotAfter(){history.push(canvas.innerHTML);if(history.length>40)history.shift();future=[]}
-function select(el){canvas.querySelectorAll('.selected').forEach(x=>x.classList.remove('selected'));selected=el;if(el)el.classList.add('selected');document.getElementById('inspector').hidden=!el;document.getElementById('inspectorEmpty').hidden=!!el;syncInspector();renderLayers()}
-function syncInspector(){if(!selected)return;contentInput.value=selected.dataset.type==='text'?selected.childNodes[0].nodeValue:'';contentInput.disabled=selected.dataset.type!=='text';xInput.value=parseInt(selected.style.left)||0;yInput.value=parseInt(selected.style.top)||0;wInput.value=parseInt(selected.style.width)||selected.offsetWidth;hInput.value=parseInt(selected.style.height)||selected.offsetHeight;fontInput.value=parseInt(selected.style.fontSize)||16;fontInput.disabled=selected.dataset.type!=='text';colorInput.value=rgbHex(selected.dataset.type==='shape'?selected.style.backgroundColor:selected.style.color)||'#111827'}
-function rgbHex(v){if(!v)return'#111827';if(v.startsWith('#'))return v;const m=v.match(/\d+/g);return m?'#'+m.slice(0,3).map(n=>(+n).toString(16).padStart(2,'0')).join(''):'#111827'}
-function renderLayers(){layers.innerHTML='';[...canvas.querySelectorAll('.element')].reverse().forEach(el=>{const d=document.createElement('div');d.className='layer'+(el===selected?' active':'');d.innerHTML='<span>'+(el.dataset.type==='text'?(el.childNodes[0].nodeValue||'Text').slice(0,24):el.dataset.type)+'</span><span>⋮</span>';d.onclick=()=>select(el);layers.appendChild(d)});if(!layers.children.length)layers.innerHTML='<div class="empty">No layers yet.</div>'}
-function applyTemplate(name){snapshot();canvas.innerHTML='';canvas.style.background=name==='breaking'?'#b91c1c':'#ffffff';if(name==='breaking'){addElement('text',{text:'BREAKING NEWS',x:70,y:70,w:580,h:100,font:72,color:'#ffffff'});addElement('text',{text:'Write the latest headline here',x:74,y:205,w:560,h:180,font:46,color:'#ffffff',weight:600});addElement('shape',{x:74,y:610,w:170,h:10,color:'#ffffff',radius:'0'})}
-if(name==='statement'){addElement('text',{text:'OFFICIAL STATEMENT',x:70,y:70,w:570,h:70,font:44,color:'#0f172a'});addElement('shape',{x:70,y:155,w:90,h:8,color:'#2563eb',radius:'0'});addElement('text',{text:'Write the statement or announcement here. Keep the message clear and readable.',x:70,y:210,w:580,h:300,font:36,color:'#334155',weight:500})}
-if(name==='interview'){canvas.style.background='#111827';addElement('shape',{x:0,y:480,w:720,h:240,color:'#0f172a',radius:'0'});addElement('text',{text:'“A strong quote from the interview.”',x:60,y:500,w:600,h:130,font:44,color:'#ffffff'});addElement('text',{text:'Name · Position',x:64,y:640,w:400,h:40,font:22,color:'#93c5fd',weight:600})}
-if(name==='nation'){canvas.style.background='#f8fafc';addElement('text',{text:'NationChat',x:48,y:42,w:300,h:65,font:48,color:'#111827'});addElement('shape',{x:48,y:135,w:624,h:430,color:'#ffffff',radius:'24px'});addElement('text',{text:'Start the conversation with a clear question or quote.',x:85,y:190,w:550,h:230,font:42,color:'#0f172a',weight:600});addElement('text',{text:'@naappe',x:86,y:510,w:180,h:35,font:21,color:'#64748b',weight:600})}bindAll()}
-addHeading.onclick=()=>addElement('text',{text:'Headline',font:64,w:420,h:90});addText.onclick=()=>addElement('text',{text:'Add your story text',font:30,weight:500,w:420,h:120});addShape.onclick=()=>addElement('shape',{w:260,h:160});uploadBtn.onclick=()=>fileInput.click();fileInput.onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>addElement('image',{src:r.result,w:420,h:300});r.readAsDataURL(f);e.target.value=''};
-document.querySelectorAll('[data-template]').forEach(x=>x.onclick=()=>applyTemplate(x.dataset.template));
-[contentInput,xInput,yInput,wInput,hInput,fontInput,colorInput].forEach(inp=>inp.oninput=()=>{if(!selected)return;if(inp===contentInput&&selected.dataset.type==='text')selected.childNodes[0].nodeValue=inp.value;if(inp===xInput)selected.style.left=inp.value+'px';if(inp===yInput)selected.style.top=inp.value+'px';if(inp===wInput)selected.style.width=inp.value+'px';if(inp===hInput)selected.style.height=inp.value+'px';if(inp===fontInput&&selected.dataset.type==='text')selected.style.fontSize=inp.value+'px';if(inp===colorInput){if(selected.dataset.type==='shape')selected.style.background=inp.value;else selected.style.color=inp.value}renderLayers()});
-deleteBtn.onclick=()=>{if(!selected)return;snapshot();selected.remove();select(null)};newBtn.onclick=()=>{snapshot();canvas.innerHTML='';canvas.style.background='#fff';select(null);renderLayers()};undoBtn.onclick=()=>{if(!history.length)return;future.push(canvas.innerHTML);restore(history.pop())};redoBtn.onclick=()=>{if(!future.length)return;history.push(canvas.innerHTML);restore(future.pop())};
-function setZoom(v){zoom=Math.min(1.8,Math.max(.35,v));canvas.style.transform='scale('+zoom+')';zoomLabel.textContent=Math.round(zoom*100)+'%'}zoomIn.onclick=()=>setZoom(zoom+.1);zoomOut.onclick=()=>setZoom(zoom-.1);fitBtn.onclick=()=>{const s=stageScroll.getBoundingClientRect();setZoom(Math.min((s.width-80)/720,(s.height-80)/720,1))};
-saveBtn.onclick=()=>{localStorage.setItem('publisher-studio-project',JSON.stringify({html:canvas.innerHTML,bg:canvas.style.background}));saveBtn.textContent='Saved';setTimeout(()=>saveBtn.textContent='Save Project',1000)};
-exportBtn.onclick=async()=>{select(null);const old=canvas.style.transform;canvas.style.transform='none';const c=await html2canvas(canvas,{scale:2,useCORS:true,backgroundColor:null});canvas.style.transform=old;const a=document.createElement('a');a.download='publisher-studio.png';a.href=c.toDataURL('image/png');a.click()};
-const saved=localStorage.getItem('publisher-studio-project');if(saved){try{const p=JSON.parse(saved);canvas.innerHTML=p.html;canvas.style.background=p.bg;bindAll()}catch{applyTemplate('statement')}}else applyTemplate('statement');window.addEventListener('resize',()=>{});
-</script>
+</div>
+<script src="./src/v3-text-bridge.js?v=4.0.0"></script>
+<script type="module" src="./src/v3-app.js?v=4.0.0"></script>
+<script type="module" src="./src/v3-elements.js?v=4.0.0"></script>
 </body>
 </html>
