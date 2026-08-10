@@ -53,7 +53,6 @@
   }
 
   function jpegToPdf(jpeg, pixelWidth, pixelHeight) {
-    // Use an A4-width physical scale while preserving the artwork aspect ratio.
     const pageWidth = 595.28;
     const pageHeight = pageWidth * pixelHeight / pixelWidth;
     const content = ascii(`q\n${pageWidth.toFixed(2)} 0 0 ${pageHeight.toFixed(2)} 0 0 cm\n/Im0 Do\nQ\n`);
@@ -92,8 +91,6 @@
 
   function mergedBlob(canvas, mime, quality) {
     return new Promise((resolve, reject) => {
-      // v3-elements overrides toBlob for the base canvas so all visible editor
-      // elements are merged without selection handles before export.
       canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('Export failed')), mime, quality);
     });
   }
@@ -127,7 +124,7 @@
     }
   }
 
-  window.addEventListener('load', () => {
+  function init() {
     addExportControls();
     const button = $('#exportImage');
     const format = $('#exportFormat');
@@ -144,5 +141,8 @@
     format.addEventListener('change', refreshStatus);
     quality?.addEventListener('change', refreshStatus);
     refreshStatus();
-  });
+  }
+
+  if (document.readyState === 'complete') init();
+  else window.addEventListener('load', init, { once: true });
 })();
