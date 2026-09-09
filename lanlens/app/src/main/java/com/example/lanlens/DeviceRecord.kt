@@ -47,7 +47,7 @@ data class DeviceRecord(
                 label = "Prusa / 3D printer"
                 vendor = "Prusa Research"
                 confidence = 97
-                evidence += "Hostname or advertised service contains “Prusa”"
+                evidence += "Hostname or advertised service contains Prusa"
             }
             containsAny("esp32", "espressif") -> {
                 label = "ESP32 / IoT device"
@@ -55,27 +55,59 @@ data class DeviceRecord(
                 confidence = 95
                 evidence += "Hostname/service signature contains ESP32 or Espressif"
             }
-            containsAny("samsung", "galaxy") -> {
-                label = "Samsung / Android device"
+            containsAny("samsung", "galaxy", "tizen") -> {
+                label = "Samsung device"
                 vendor = "Samsung"
                 confidence = 93
-                evidence += "Hostname/service signature contains Samsung or Galaxy"
+                evidence += "Samsung/Galaxy/Tizen naming or service signature observed"
             }
-            containsAny("iphone", "ipad", "apple", "airplay", "raop", "companion-link") -> {
+            containsAny("iphone", "ipad", "apple", "airplay", "raop", "companion-link") || port(62078) -> {
                 label = "Apple device"
                 vendor = "Apple"
                 confidence = 91
-                evidence += "Apple Bonjour/AirPlay naming or service signature observed"
+                evidence += if (port(62078)) "Apple mobile pairing/sync service observed" else "Apple Bonjour/AirPlay naming or service signature observed"
             }
             containsAny("googlecast", "chromecast") || port(8008, 8009) -> {
                 label = "Cast / smart display"
                 vendor = "Google-compatible Cast"
                 confidence = 88
-                evidence += if (containsAny("googlecast", "chromecast")) {
-                    "Google Cast service advertised"
-                } else {
-                    "Cast-associated TCP service observed"
-                }
+                evidence += if (containsAny("googlecast", "chromecast")) "Google Cast service advertised" else "Cast-associated TCP service observed"
+            }
+            containsAny("roku") -> {
+                label = "Roku / streaming device"
+                vendor = "Roku"
+                confidence = 92
+                evidence += "Roku signature observed in advertised device information"
+            }
+            containsAny("webos", "lg electronics") -> {
+                label = "LG smart TV / appliance"
+                vendor = "LG"
+                confidence = 91
+                evidence += "LG/webOS device description observed"
+            }
+            containsAny("bravia", "sony corporation") -> {
+                label = "Sony smart device"
+                vendor = "Sony"
+                confidence = 90
+                evidence += "Sony/BRAVIA device description observed"
+            }
+            containsAny("synology") -> {
+                label = "Synology NAS / server"
+                vendor = "Synology"
+                confidence = 95
+                evidence += "Synology identity observed in network metadata"
+            }
+            containsAny("qnap") -> {
+                label = "QNAP NAS / server"
+                vendor = "QNAP"
+                confidence = 95
+                evidence += "QNAP identity observed in network metadata"
+            }
+            containsAny("tp-link", "tplink", "tapo") -> {
+                label = "TP-Link / Tapo network device"
+                vendor = "TP-Link"
+                confidence = 91
+                evidence += "TP-Link/Tapo device metadata observed"
             }
             containsAny("home-assistant", "home assistant") || port(8123) -> {
                 label = "Home Assistant / automation hub"
@@ -100,18 +132,18 @@ data class DeviceRecord(
                 confidence = 92
                 evidence += "Xiaomi service signature observed"
             }
-            containsAny("megatrac", "megarac", "ami") && port(80, 443, 623, 8443) -> {
+            containsAny("megarac", "ami ") && port(80, 443, 623, 8443) -> {
                 label = "Server management controller"
                 vendor = "AMI / MegaRAC"
                 confidence = 93
                 evidence += "AMI/MegaRAC signature plus management service observed"
             }
-            containsAny("_ipp", "_printer", "pdl-datastream") || port(631, 9100) -> {
+            containsAny("_ipp", "_printer", "pdl-datastream", "epson", "brother", "canon printer") || port(631, 9100) -> {
                 label = "Printer / print appliance"
                 confidence = 86
                 evidence += when {
                     containsAny("_ipp", "_printer", "pdl-datastream") -> "Printer service advertised over mDNS"
-                    else -> "Printer-associated TCP port observed"
+                    else -> "Printer identity or print-associated TCP port observed"
                 }
             }
             port(554) -> {
@@ -128,6 +160,11 @@ data class DeviceRecord(
                 label = "Windows / SMB-capable device"
                 confidence = 78
                 evidence += "SMB service port observed"
+            }
+            "netbios node status" in text -> {
+                label = "NetBIOS-capable LAN device"
+                confidence = 68
+                evidence += "Device answered a NetBIOS node-status request"
             }
             port(53) && port(80, 443, 8080, 8443) -> {
                 label = "Router / DNS appliance"
@@ -159,6 +196,11 @@ data class DeviceRecord(
                 confidence = 58
                 evidence += "SSH port 22 observed"
             }
+            containsAny("host actively refused", "host answered an ip reachability") -> {
+                label = "Live LAN host"
+                confidence = 55
+                evidence += "The IP directly answered an active LAN reachability check"
+            }
         }
 
         if (!hostname.isNullOrBlank() && hostname != ip && "This phone" != hostname) {
@@ -176,13 +218,19 @@ data class DeviceRecord(
 
         if (vendor == null) {
             vendor = when {
-                containsAny("samsung", "galaxy") -> "Samsung"
+                containsAny("samsung", "galaxy", "tizen") -> "Samsung"
                 containsAny("apple", "iphone", "ipad", "airplay", "raop") -> "Apple"
                 containsAny("prusa") -> "Prusa Research"
                 containsAny("espressif", "esp32") -> "Espressif"
                 containsAny("ubiquiti", "unifi") -> "Ubiquiti"
                 containsAny("xiaomi", "miio") -> "Xiaomi"
                 containsAny("sonos") -> "Sonos"
+                containsAny("synology") -> "Synology"
+                containsAny("qnap") -> "QNAP"
+                containsAny("tp-link", "tplink", "tapo") -> "TP-Link"
+                containsAny("webos", "lg electronics") -> "LG"
+                containsAny("bravia", "sony corporation") -> "Sony"
+                containsAny("roku") -> "Roku"
                 else -> null
             }
         }
@@ -205,12 +253,14 @@ data class DeviceRecord(
                 139 -> "139 NetBIOS"
                 443 -> "443 HTTPS"
                 445 -> "445 SMB"
+                548 -> "548 AFP"
                 554 -> "554 RTSP"
                 623 -> "623 IPMI"
                 631 -> "631 IPP"
                 1883 -> "1883 MQTT"
                 3389 -> "3389 RDP"
                 5000 -> "5000 Web/API"
+                5357 -> "5357 WSD"
                 7000 -> "7000 AirPlay/web"
                 8008 -> "8008 Cast/web"
                 8009 -> "8009 Cast"
@@ -220,6 +270,7 @@ data class DeviceRecord(
                 8883 -> "8883 MQTT-TLS"
                 9100 -> "9100 Printer"
                 32400 -> "32400 Plex"
+                62078 -> "62078 Apple sync"
                 else -> port.toString()
             }
         }
