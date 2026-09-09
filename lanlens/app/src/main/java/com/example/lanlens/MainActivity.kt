@@ -11,6 +11,7 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
+import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -24,12 +25,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var networkText: TextView
     private lateinit var statusText: TextView
     private lateinit var summaryText: TextView
+    private lateinit var diagnosticText: TextView
     private lateinit var results: LinearLayout
     private lateinit var scanButton: Button
     private lateinit var copyButton: Button
     private val records = ConcurrentHashMap<String, DeviceRecord>()
     private var mdns: MdnsDiscovery? = null
     private var scanStartedAt = 0L
+    private var scanCompleted = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,7 +66,7 @@ class MainActivity : AppCompatActivity() {
             setTypeface(typeface, Typeface.BOLD)
         }
         val subtitle = TextView(this).apply {
-            text = "See what a normal Android phone can identify on your own Wi-Fi/LAN."
+            text = "Discover devices that are actually visible to this Android phone on your Wi-Fi/LAN."
             textSize = 14f
             setTextColor(Color.rgb(88, 99, 115))
             setPadding(0, dp(5), 0, dp(14))
@@ -122,7 +125,12 @@ class MainActivity : AppCompatActivity() {
             text = "Ready"
             textSize = 12f
             setTextColor(Color.rgb(94, 106, 123))
-            setPadding(0, 0, 0, dp(10))
+            setPadding(0, 0, 0, dp(8))
+        }
+        diagnosticText = TextView(this).apply {
+            visibility = View.GONE
+            textSize = 12f
+            setPadding(dp(12), dp(10), dp(12), dp(10))
         }
 
         results = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
@@ -137,6 +145,7 @@ class MainActivity : AppCompatActivity() {
         root.addView(buttons, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
         root.addView(summaryText)
         root.addView(statusText)
+        root.addView(diagnosticText, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(9) })
         root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
         setContentView(root)
     }
@@ -168,8 +177,13 @@ class MainActivity : AppCompatActivity() {
         results.removeAllViews()
         scanButton.isEnabled = false
         copyButton.isEnabled = false
+        scanCompleted = false
         scanStartedAt = System.currentTimeMillis()
-        statusText.text = "Starting mDNS, SSDP and local service discovery…"
+        diagnosticText.visibility = View.VISIBLE
+        diagnosticText.text = "Peer visibility: testing direct LAN responses…"
+        diagnosticText.setTextColor(Color.rgb(86, 97, 114))
+        diagnosticText.background = rounded(Color.rgb(238, 243, 250), null, 12)
+        statusText.text = "Starting host probes, mDNS, SSDP and NetBIOS discovery…"
 
         records[network.ip] = DeviceRecord(network.ip).apply {
             hostname = "This phone"
@@ -183,6 +197,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
         render()
+
+        val targets = network.scanTargets()
 
         mdns?.stop()
         mdns = MdnsDiscovery(this).also { discovery ->
@@ -199,6 +215,14 @@ class MainActivity : AppCompatActivity() {
 
         SsdpDiscovery(this).discover { ip, headers ->
             val r = records.computeIfAbsent(ip) { DeviceRecord(ip) }
+            headers["X-FRIENDLY-NAME"]?.let {
+                if (r.hostname.isNullOrBlank()) r.hostname = it
+                r.details += "SSDP friendly name: $it"
+            }
+            headers["X-MANUFACTURER"]?.let { r.details += "SSDP manufacturer: $it" }
+            headers["X-MODEL-NAME"]?.let { r.details += "SSDP model: $it" }
+            headers["X-MODEL-NUMBER"]?.let { r.details += "SSDP model number: $it" }
+            headers["X-DEVICE-TYPE"]?.let { r.details += "SSDP device type: $it" }
             headers["SERVER"]?.let { r.details += "SSDP server: $it" }
             headers["ST"]?.let { r.services += "SSDP $it" }
             headers["USN"]?.let { r.details += "SSDP USN: $it" }
@@ -207,13 +231,22 @@ class MainActivity : AppCompatActivity() {
             runOnUiThread { render() }
         }
 
-        val targets = network.scanTargets()
+        NetbiosDiscovery().scan(targets) { ip, name, mac ->
+            val r = records.computeIfAbsent(ip) { DeviceRecord(ip) }
+            if (!name.isNullOrBlank() && r.hostname.isNullOrBlank()) r.hostname = name
+            name?.let { r.details += "NetBIOS name: $it" }
+            mac?.let { r.details += "NetBIOS MAC: $it" }
+            r.details += "NetBIOS node status"
+            r.sources += "NetBIOS node status"
+            runOnUiThread { render() }
+        }
+
         LanScanner().scan(
             targets,
             onProgress = { done, total ->
                 if (done % 8 == 0 || done == total) runOnUiThread {
-                    val identified = records.values.count { it.identity().confidence >= 70 }
-                    statusText.text = "Scanning $done / $total addresses  •  ${records.size} seen  •  $identified identified"
+                    val peerCount = peerRecords().size
+                    statusText.text = "Scanning $done / $total addresses  •  $peerCount peer device${if (peerCount == 1) "" else "s"} answering"
                 }
             },
             onFound = { incoming ->
@@ -227,9 +260,11 @@ class MainActivity : AppCompatActivity() {
             },
             onFinished = {
                 runOnUiThread {
+                    scanCompleted = true
                     val seconds = ((System.currentTimeMillis() - scanStartedAt) / 1000.0)
-                    val identified = records.values.count { it.identity().confidence >= 70 }
-                    statusText.text = "Finished in ${"%.1f".format(seconds)} s  •  ${records.size} devices seen  •  $identified confidently identified"
+                    val peers = peerRecords()
+                    val typed = peers.count { it.identity().confidence >= 70 }
+                    statusText.text = "Host sweep finished in ${"%.1f".format(seconds)} s  •  ${peers.size} peers seen  •  $typed strongly typed  •  Bonjour may continue briefly"
                     scanButton.isEnabled = true
                     copyButton.isEnabled = records.isNotEmpty()
                     render()
@@ -238,16 +273,41 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
+    private fun isSelfOrGateway(r: DeviceRecord): Boolean {
+        return r.details.contains("role:this-phone") || r.details.contains("role:default-gateway")
+    }
+
+    private fun peerRecords(): List<DeviceRecord> = records.values.filterNot { isSelfOrGateway(it) }
+
     private fun render() {
         results.removeAllViews()
 
         val identities = records.values.map { it to it.identity() }
-        val identified = identities.count { it.second.confidence >= 70 }
-        val unknown = identities.size - identified
-        summaryText.text = "${identities.size} devices  •  $identified identified  •  $unknown uncertain"
+        val peers = identities.filterNot { isSelfOrGateway(it.first) }
+        val stronglyTyped = peers.count { it.second.confidence >= 70 }
+        val uncertain = peers.size - stronglyTyped
+        summaryText.text = "${peers.size} peer device${if (peers.size == 1) "" else "s"}  •  $stronglyTyped strongly identified  •  $uncertain uncertain  •  ${identities.size} total incl. phone/router"
+
+        if (!scanCompleted) {
+            diagnosticText.visibility = View.VISIBLE
+            diagnosticText.text = "Peer visibility: testing direct LAN responses…"
+            diagnosticText.setTextColor(Color.rgb(86, 97, 114))
+            diagnosticText.background = rounded(Color.rgb(238, 243, 250), null, 12)
+        } else if (peers.isEmpty()) {
+            diagnosticText.visibility = View.VISIBLE
+            diagnosticText.text = "No peer device answered this phone. Likely causes: Wi-Fi client/AP isolation, guest or managed Wi-Fi, or peers filtering direct probes. A normal Android app cannot enter full Wi-Fi monitor mode, so dedicated radio hardware can still observe RF activity that this app cannot see."
+            diagnosticText.setTextColor(Color.rgb(126, 78, 0))
+            diagnosticText.background = rounded(Color.rgb(255, 247, 225), null, 12)
+        } else {
+            diagnosticText.visibility = View.VISIBLE
+            diagnosticText.text = "Peer visibility is working: ${peers.size} other LAN device${if (peers.size == 1) "" else "s"} answered at least one discovery method."
+            diagnosticText.setTextColor(Color.rgb(22, 103, 69))
+            diagnosticText.background = rounded(Color.rgb(232, 247, 239), null, 12)
+        }
 
         identities
-            .sortedWith(compareByDescending<Pair<DeviceRecord, DeviceIdentity>> { it.second.confidence }
+            .sortedWith(compareBy<Pair<DeviceRecord, DeviceIdentity>> { isSelfOrGateway(it.first) }
+                .thenByDescending { it.second.confidence }
                 .thenBy { ipToLong(it.first.ip) })
             .forEach { (r, identity) ->
                 val card = LinearLayout(this).apply {
@@ -340,6 +400,25 @@ class MainActivity : AppCompatActivity() {
                     card.addView(why)
                 }
 
+                val rawClues = r.details.filterNot { it.startsWith("role:") }.take(5)
+                if (rawClues.isNotEmpty()) {
+                    val clueTitle = TextView(this).apply {
+                        text = "RAW CLUES"
+                        textSize = 10f
+                        letterSpacing = 0.07f
+                        setTextColor(Color.rgb(107, 119, 136))
+                        setTypeface(typeface, Typeface.BOLD)
+                        setPadding(0, dp(9), 0, dp(2))
+                    }
+                    val clues = TextView(this).apply {
+                        text = rawClues.joinToString("\n") { "• $it" }
+                        textSize = 10.5f
+                        setTextColor(Color.rgb(74, 85, 101))
+                    }
+                    card.addView(clueTitle)
+                    card.addView(clues)
+                }
+
                 results.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(9) })
             }
     }
@@ -354,9 +433,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun buildReport(): String {
         val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+        val peers = peerRecords()
         return buildString {
             appendLine("LAN Lens report — $timestamp")
-            appendLine("Devices: ${records.size}")
+            appendLine("Peer devices: ${peers.size}")
+            appendLine("Total records including phone/router: ${records.size}")
+            if (scanCompleted && peers.isEmpty()) appendLine("Diagnostic: no peer answered; client/AP isolation or peer filtering may be active")
             appendLine()
             records.values.sortedBy { ipToLong(it.ip) }.forEach { r ->
                 val id = r.identity()
@@ -366,6 +448,7 @@ class MainActivity : AppCompatActivity() {
                 if (r.sources.isNotEmpty()) appendLine("Sources: ${r.sources.joinToString(", ")}")
                 if (r.serviceSummary().isNotEmpty()) appendLine("TCP: ${r.serviceSummary().joinToString(", ")}")
                 if (r.services.isNotEmpty()) appendLine("Advertised: ${r.services.joinToString(", ")}")
+                if (r.details.isNotEmpty()) appendLine("Raw clues: ${r.details.filterNot { it.startsWith("role:") }.joinToString(" | ")}")
                 if (id.evidence.isNotEmpty()) appendLine("Evidence: ${id.evidence.joinToString(" | ")}")
                 appendLine()
             }
