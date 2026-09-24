@@ -158,6 +158,7 @@ def main():
             queue.append({
                 "id": "disc-" + fp,
                 "topic": category,
+                "interest": topic.get("name", category),
                 "text": post,
                 "confidence": confidence,
                 "status": status,
