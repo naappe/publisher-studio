@@ -1,10 +1,18 @@
 import json, hashlib, html, re, urllib.parse, xml.etree.ElementTree as ET
 from pathlib import Path
+from datetime import datetime, timezone, timedelta
+from email.utils import parsedate_to_datetime
+from difflib import SequenceMatcher
 import requests
 
 ROOT = Path(__file__).resolve().parents[1]
 QUEUE = ROOT / "automation" / "queue.json"
 INTERESTS = ROOT / "automation" / "interests.json"
+
+SENSITIVE_TERMS = {
+    "president","minister","ministry","government","parliament","election","candidate",
+    "party","ambassador","foreign affairs","police","court","protest","military"
+}
 
 def load(path, default):
     if not path.exists():
@@ -31,7 +39,7 @@ def google_news_rss(query):
 
 def fetch_items(query):
     url = google_news_rss(query)
-    r = requests.get(url, timeout=20, headers={"User-Agent":"PublisherStudioAutopilot/1.0"})
+    r = requests.get(url, timeout=20, headers={"User-Agent":"PublisherStudioAutopilot/1.1"})
     r.raise_for_status()
     root = ET.fromstring(r.text)
     out = []
@@ -39,24 +47,65 @@ def fetch_items(query):
         title = clean_title(item.findtext("title"))
         link = (item.findtext("link") or "").strip()
         pub = (item.findtext("pubDate") or "").strip()
+        source = item.find("source")
+        source_name = (source.text or "").strip() if source is not None else ""
+        source_url = source.attrib.get("url","").strip() if source is not None else ""
         if title and link:
-            out.append({"title": title, "link": link, "pubDate": pub})
+            out.append({"title": title, "link": link, "pubDate": pub, "source_name": source_name, "source_url": source_url})
     return out
 
-def build_post(title, link):
-    base = title.strip()
+def is_recent(pub_date, days=3):
+    if not pub_date:
+        return True
+    try:
+        dt = parsedate_to_datetime(pub_date)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt >= datetime.now(timezone.utc) - timedelta(days=days)
+    except Exception:
+        return True
+
+def similar(a, b):
+    return SequenceMatcher(None, norm(a), norm(b)).ratio() >= 0.72
+
+def relevant(title, topic):
+    q = norm(topic.get("query", topic.get("name","")))
+    name = norm(topic.get("name",""))
+    t = norm(title)
+
+    if name == "maldives":
+        return "maldives" in t or "maldivian" in t
+
+    tokens = [x for x in re.findall(r"[a-z0-9]+", q) if len(x) > 2 and x not in {"and","or"}]
+    return any(tok in t for tok in tokens)
+
+def classify(title, default_category):
+    t = norm(title)
+    if any(term in t for term in SENSITIVE_TERMS):
+        return "politics", "review", 80
+    return default_category, "auto", 92
+
+def build_post(title, source_name, link):
+    intro = "Worth noting:"
+    source = f" — {source_name}" if source_name else ""
+    base = f"{intro} {title}{source}"
     suffix = f"\n{link}"
-    max_title = 280 - len(suffix)
-    if max_title < 40:
+    max_base = 280 - len(suffix)
+    if max_base < 50:
         return ""
-    if len(base) > max_title:
-        base = base[:max_title-1].rstrip() + "…"
+    if len(base) > max_base:
+        base = base[:max_base-1].rstrip() + "…"
     return base + suffix
 
 def main():
     cfg = load(INTERESTS, {})
     queue = load(QUEUE, [])
-    existing = {fid(x.get("text","")) for x in queue}
+
+    # Remove initial demo/test items once discovery is active.
+    queue = [x for x in queue if x.get("id") not in {"welcome-1","review-example"}]
+
+    existing_text = {fid(x.get("text","")) for x in queue}
+    existing_titles = [x.get("source_title","") for x in queue if x.get("source_title")]
     blocked = {w.lower() for w in cfg.get("blocked_words", [])}
     limit = int(cfg.get("max_new_items_per_run", 8))
     added = 0
@@ -74,35 +123,47 @@ def main():
         for item in items:
             if added >= limit:
                 break
-            hay = norm(item["title"])
+
+            title = item["title"]
+            hay = norm(title)
+
+            if not is_recent(item.get("pubDate"), days=3):
+                continue
             if any(w in hay for w in blocked):
                 continue
+            if not relevant(title, topic):
+                continue
+            if any(similar(title, old) for old in existing_titles):
+                continue
 
-            post = build_post(item["title"], item["link"])
+            category, status, confidence = classify(title, topic.get("category","general"))
+            post = build_post(title, item.get("source_name",""), item["link"])
             if not post:
                 continue
+
             fp = fid(post)
-            if fp in existing:
+            if fp in existing_text:
                 continue
 
-            category = topic.get("category","general")
-            sensitive = category in {"politics","breaking-news"}
             queue.append({
                 "id": "disc-" + fp,
                 "topic": category,
                 "text": post,
-                "confidence": 90 if not sensitive else 80,
-                "status": "review" if sensitive else "auto",
+                "confidence": confidence,
+                "status": status,
                 "source": item["link"],
-                "source_title": item["title"],
+                "source_name": item.get("source_name",""),
+                "source_url": item.get("source_url",""),
+                "source_title": title,
                 "discovered_at": item.get("pubDate","")
             })
-            existing.add(fp)
+            existing_text.add(fp)
+            existing_titles.append(title)
             added += 1
 
-    if added:
-        save(QUEUE, queue)
+    save(QUEUE, queue)
     print(f"DISCOVERY_ADDED={added}")
+    print(f"QUEUE_TOTAL={len(queue)}")
 
 if __name__ == "__main__":
     main()
