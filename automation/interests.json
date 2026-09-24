@@ -1,19 +1,107 @@
 {
   "topics": [
-    {"name":"Maldives","query":"Maldives","category":"general","weight":100},
-    {"name":"Maldives Business","query":"Maldives business economy company","category":"business","weight":95},
-    {"name":"Maldives Tourism","query":"Maldives tourism resort airline travel","category":"tourism","weight":92},
-    {"name":"Maldives Jobs","query":"Maldives jobs employment hiring","category":"jobs","weight":90},
-    {"name":"AI","query":"artificial intelligence AI","category":"technology","weight":90},
-    {"name":"Technology","query":"technology software apps cybersecurity","category":"technology","weight":85},
-    {"name":"Business","query":"business economy startups entrepreneurs","category":"business","weight":82},
-    {"name":"Markets","query":"markets prices consumer demand retail","category":"market","weight":80},
-    {"name":"Construction","query":"construction building infrastructure procurement","category":"construction","weight":78},
-    {"name":"Food","query":"food restaurant cafe catering hospitality","category":"food","weight":76},
-    {"name":"Energy","query":"energy electricity diesel renewable power","category":"energy","weight":74},
-    {"name":"Finance","query":"finance banking payments credit fintech","category":"finance","weight":72},
-    {"name":"Science","query":"science research innovation climate","category":"science","weight":70},
-    {"name":"Transport","query":"transport aviation shipping logistics mobility","category":"transport","weight":68}
+    {
+      "name": "Maldives",
+      "query": "Maldives",
+      "category": "general",
+      "weight": 100
+    },
+    {
+      "name": "Maldives Business",
+      "query": "Maldives business economy company",
+      "category": "business",
+      "weight": 95
+    },
+    {
+      "name": "Maldives Tourism",
+      "query": "Maldives tourism resort airline travel",
+      "category": "tourism",
+      "weight": 92
+    },
+    {
+      "name": "Maldives Jobs",
+      "query": "Maldives jobs employment hiring",
+      "category": "jobs",
+      "weight": 90
+    },
+    {
+      "name": "AI",
+      "query": "artificial intelligence AI",
+      "category": "technology",
+      "weight": 90
+    },
+    {
+      "name": "Technology",
+      "query": "technology software apps cybersecurity",
+      "category": "technology",
+      "weight": 85
+    },
+    {
+      "name": "Business",
+      "query": "business economy startups entrepreneurs",
+      "category": "business",
+      "weight": 82
+    },
+    {
+      "name": "Markets",
+      "query": "markets prices consumer demand retail",
+      "category": "market",
+      "weight": 80
+    },
+    {
+      "name": "Construction",
+      "query": "construction building infrastructure procurement",
+      "category": "construction",
+      "weight": 78
+    },
+    {
+      "name": "Food",
+      "query": "food restaurant cafe catering hospitality",
+      "category": "food",
+      "weight": 76
+    },
+    {
+      "name": "Energy",
+      "query": "energy electricity diesel renewable power",
+      "category": "energy",
+      "weight": 74
+    },
+    {
+      "name": "Finance",
+      "query": "finance banking payments credit fintech",
+      "category": "finance",
+      "weight": 72
+    },
+    {
+      "name": "Science",
+      "query": "science research innovation climate",
+      "category": "science",
+      "weight": 70
+    },
+    {
+      "name": "Transport",
+      "query": "transport aviation shipping logistics mobility",
+      "category": "transport",
+      "weight": 68
+    },
+    {
+      "name": "President Muizzu",
+      "query": "President Muizzu Maldives",
+      "category": "politics",
+      "weight": 90
+    },
+    {
+      "name": "Maldives Politics",
+      "query": "Maldives politics government parliament parties",
+      "category": "politics",
+      "weight": 88
+    },
+    {
+      "name": "Mohamed Ismail",
+      "query": "\"Mohamed Ismail\" Maldives",
+      "category": "politics",
+      "weight": 82
+    }
   ],
   "blocked_words": [
     "rumor",
