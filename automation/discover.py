@@ -14,6 +14,11 @@ SENSITIVE_TERMS = {
     "party","ambassador","foreign affairs","police","court","protest","military"
 }
 
+NOISE_TERMS = {
+    "friendly","friendlies","match","fixture","football","soccer","cricket","tennis",
+    "basketball","score","head-to-head","h2h","movie","celebrity","gossip"
+}
+
 def load(path, default):
     if not path.exists():
         return default
@@ -39,7 +44,7 @@ def google_news_rss(query):
 
 def fetch_items(query):
     url = google_news_rss(query)
-    r = requests.get(url, timeout=20, headers={"User-Agent":"PublisherStudioAutopilot/1.1"})
+    r = requests.get(url, timeout=20, headers={"User-Agent":"PublisherStudioAutopilot/1.2"})
     r.raise_for_status()
     root = ET.fromstring(r.text)
     out = []
@@ -74,10 +79,17 @@ def relevant(title, topic):
     t = norm(title)
 
     if name == "maldives":
-        return "maldives" in t or "maldivian" in t
+        return ("maldives" in t or "maldivian" in t) and not any(term in t for term in NOISE_TERMS)
 
     tokens = [x for x in re.findall(r"[a-z0-9]+", q) if len(x) > 2 and x not in {"and","or"}]
-    return any(tok in t for tok in tokens)
+    if not any(tok in t for tok in tokens):
+        return False
+
+    # Sports/entertainment noise stays out unless explicitly requested as a topic.
+    if topic.get("category") not in {"sports","entertainment"} and any(term in t for term in NOISE_TERMS):
+        return False
+
+    return True
 
 def classify(title, default_category):
     t = norm(title)
@@ -85,23 +97,21 @@ def classify(title, default_category):
         return "politics", "review", 80
     return default_category, "auto", 92
 
-def build_post(title, source_name, link):
-    intro = "Worth noting:"
-    source = f" — {source_name}" if source_name else ""
-    base = f"{intro} {title}{source}"
-    suffix = f"\n{link}"
-    max_base = 280 - len(suffix)
-    if max_base < 50:
-        return ""
-    if len(base) > max_base:
-        base = base[:max_base-1].rstrip() + "…"
-    return base + suffix
+def build_post(title, source_name):
+    source = f" ({source_name})" if source_name else ""
+    base = f"{title}{source}"
+
+    # Keep the actual article URL in metadata/source, not in the post text.
+    # This avoids ugly Google News redirect URLs and leaves room for a cleaner caption.
+    if len(base) > 250:
+        base = base[:249].rstrip() + "…"
+
+    return base
 
 def main():
     cfg = load(INTERESTS, {})
     queue = load(QUEUE, [])
 
-    # Remove initial demo/test items once discovery is active.
     queue = [x for x in queue if x.get("id") not in {"welcome-1","review-example"}]
 
     existing_text = {fid(x.get("text","")) for x in queue}
@@ -137,7 +147,7 @@ def main():
                 continue
 
             category, status, confidence = classify(title, topic.get("category","general"))
-            post = build_post(title, item.get("source_name",""), item["link"])
+            post = build_post(title, item.get("source_name",""))
             if not post:
                 continue
 
