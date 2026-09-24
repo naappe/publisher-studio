@@ -1,0 +1,13 @@
+{
+  "topics": [
+    {"name": "Maldives", "query": "Maldives", "category": "general", "weight": 100},
+    {"name": "AI", "query": "artificial intelligence OR AI", "category": "technology", "weight": 90},
+    {"name": "Technology", "query": "technology", "category": "technology", "weight": 80},
+    {"name": "Business", "query": "business economy startups", "category": "business", "weight": 80}
+  ],
+  "blocked_words": [
+    "rumor",
+    "unconfirmed"
+  ],
+  "max_new_items_per_run": 8
+}
