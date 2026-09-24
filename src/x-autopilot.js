@@ -1,1 +1,150 @@
-const key="publisher-x-autopilot-v1";\nlet localItems=JSON.parse(localStorage.getItem(key)||"[]");\nlet remoteItems=[];\n\nfunction statusFor(x){\n  return (x.topic==="politics"||x.topic==="breaking-news"||x.confidence<85)?"review":"auto";\n}\n\nfunction allItems(){\n  const seen=new Set();\n  return [...remoteItems,...localItems].filter(x=>{\n    const id=x.id||x.text;\n    if(seen.has(id)) return false;\n    seen.add(id);\n    return true;\n  });\n}\n\nfunction saveLocal(){\n  localStorage.setItem(key,JSON.stringify(localItems));\n  render();\n}\n\nasync function loadRemoteQueue(){\n  try{\n    const r=await fetch("./automation/queue.json?ts="+Date.now(),{cache:"no-store"});\n    if(!r.ok) throw new Error("HTTP "+r.status);\n    const data=await r.json();\n    remoteItems=Array.isArray(data)?data:[];\n  }catch(err){\n    console.warn("Queue load failed",err);\n    remoteItems=[];\n  }\n  render();\n}\n\nfunction render(){\n  const items=allItems();\n  const q=document.getElementById("queue");\n  q.innerHTML="";\n\n  if(!items.length){\n    q.innerHTML="<div class=\"post\"><p class=\"muted\">No queued items yet. Run the X Autopilot workflow in dry-run mode to discover fresh content.</p></div>";\n  }\n\n  items.forEach(x=>{\n    const isRemote=remoteItems.includes(x);\n    const el=document.createElement("div");\n    el.className="post";\n    const source=x.source_name||x.source_title||"";\n    const origin=isRemote?"GITHUB QUEUE":"LOCAL DRAFT";\n\n    const meta=document.createElement("div");\n    meta.className="meta";\n    const pill=document.createElement("span");\n    pill.className="pill";\n    pill.textContent=x.topic||"general";\n    const info=document.createElement("span");\n    info.textContent=(x.confidence||0)+"% · "+(x.status==="auto"?"AUTO":"REVIEW")+" · "+origin+(source?" · "+source:"");\n    meta.appendChild(pill);\n    meta.appendChild(info);\n    el.appendChild(meta);\n\n    const p=document.createElement("p");\n    p.textContent=x.text||"";\n    el.appendChild(p);\n\n    const actions=document.createElement("div");\n    actions.style.cssText="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap";\n\n    if(x.source && x.source!=="manual-browser"){\n      const a=document.createElement("a");\n      a.href=x.source;\n      a.target="_blank";\n      a.rel="noopener noreferrer";\n      a.className="btn secondary";\n      a.textContent="Open source";\n      actions.appendChild(a);\n    }\n\n    if(!isRemote){\n      const toggle=document.createElement("button");\n      toggle.className="btn secondary";\n      toggle.textContent=x.status==="auto"?"Send to review":"Approve";\n      toggle.onclick=()=>{x.status=x.status==="auto"?"review":"auto";saveLocal();};\n      actions.appendChild(toggle);\n\n      const del=document.createElement("button");\n      del.className="btn danger";\n      del.textContent="Remove";\n      del.onclick=()=>{localItems=localItems.filter(y=>y.id!==x.id);saveLocal();};\n      actions.appendChild(del);\n    }\n\n    el.appendChild(actions);\n    q.appendChild(el);\n  });\n\n  document.getElementById("queuedCount").textContent=items.length;\n  document.getElementById("approvedCount").textContent=items.filter(x=>x.status==="auto").length;\n  document.getElementById("manualCount").textContent=items.filter(x=>x.status==="review").length;\n  document.getElementById("postedCount").textContent="—";\n}\n\ndocument.getElementById("addBtn").onclick=()=>{\n  const text=document.getElementById("draft").value.trim();\n  if(!text)return;\n  const topic=document.getElementById("category").value;\n  const confidence=Math.max(0,Math.min(100,+document.getElementById("confidence").value||0));\n  const item={id:crypto.randomUUID(),topic,text,confidence,status:statusFor({topic,confidence}),source:"manual-browser"};\n  localItems.unshift(item);\n  document.getElementById("draft").value="";\n  saveLocal();\n};\n\nrender();\nloadRemoteQueue();
+const key="publisher-x-autopilot-v1";
+const feedbackKey=key+"-feedback";
+let localItems=JSON.parse(localStorage.getItem(key)||"[]");
+let feedback=JSON.parse(localStorage.getItem(feedbackKey)||"[]");
+let remoteItems=[];
+
+function statusFor(x){
+  return (x.topic==="politics"||x.topic==="breaking-news"||x.confidence<85)?"review":"auto";
+}
+function allItems(){
+  const seen=new Set();
+  return [...remoteItems,...localItems].filter(x=>{
+    const id=x.id||x.text;
+    if(seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
+}
+function saveLocal(){
+  localStorage.setItem(key,JSON.stringify(localItems));
+  render();
+}
+function saveFeedback(){
+  localStorage.setItem(feedbackKey,JSON.stringify(feedback));
+  renderFeedbackStatus();
+}
+function renderFeedbackStatus(){
+  const el=document.getElementById("feedbackStatus");
+  if(el) el.textContent=feedback.length+" feedback item"+(feedback.length===1?"":"s")+" saved";
+}
+function recordFeedback(x,action){
+  feedback.push({
+    id:x.id||crypto.randomUUID(),
+    action,
+    interest:x.interest||"",
+    topic:x.topic||"",
+    category:x.topic||"",
+    source_title:x.source_title||"",
+    created_at:new Date().toISOString(),
+    applied:false
+  });
+  saveFeedback();
+}
+async function loadRemoteQueue(){
+  try{
+    const r=await fetch("./automation/queue.json?ts="+Date.now(),{cache:"no-store"});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    const data=await r.json();
+    remoteItems=Array.isArray(data)?data:[];
+  }catch(err){
+    console.warn("Queue load failed",err);
+    remoteItems=[];
+  }
+  render();
+}
+function makeFeedbackButton(label,action,x,cls="secondary"){
+  const b=document.createElement("button");
+  b.className="btn "+cls;
+  b.textContent=label;
+  b.onclick=()=>{recordFeedback(x,action); b.textContent=label+" ✓";};
+  return b;
+}
+function render(){
+  const items=allItems();
+  const q=document.getElementById("queue");
+  q.innerHTML="";
+  if(!items.length){
+    q.innerHTML="<div class=\"post\"><p class=\"muted\">No queued items yet. Run the X Autopilot workflow in dry-run mode to discover fresh content.</p></div>";
+  }
+  items.forEach(x=>{
+    const isRemote=remoteItems.includes(x);
+    const el=document.createElement("div");
+    el.className="post";
+
+    const meta=document.createElement("div");
+    meta.className="meta";
+    const pill=document.createElement("span");
+    pill.className="pill";
+    pill.textContent=x.interest||x.topic||"general";
+    const info=document.createElement("span");
+    const source=x.source_name||x.source_title||"";
+    info.textContent=(x.confidence||0)+"% · "+(x.status==="auto"?"AUTO":"REVIEW")+" · "+(isRemote?"GITHUB QUEUE":"LOCAL DRAFT")+(source?" · "+source:"");
+    meta.appendChild(pill); meta.appendChild(info); el.appendChild(meta);
+
+    const p=document.createElement("p");
+    p.textContent=x.text||"";
+    el.appendChild(p);
+
+    const actions=document.createElement("div");
+    actions.style.cssText="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap";
+
+    actions.appendChild(makeFeedbackButton("Keep","keep",x));
+    actions.appendChild(makeFeedbackButton("Engage","engage",x));
+    actions.appendChild(makeFeedbackButton("Reject","reject",x,"danger"));
+    actions.appendChild(makeFeedbackButton("Ignore","ignore",x));
+
+    if(x.source && x.source!=="manual-browser"){
+      const a=document.createElement("a");
+      a.href=x.source; a.target="_blank"; a.rel="noopener noreferrer";
+      a.className="btn secondary"; a.textContent="Open source";
+      actions.appendChild(a);
+    }
+
+    if(!isRemote){
+      const toggle=document.createElement("button");
+      toggle.className="btn secondary";
+      toggle.textContent=x.status==="auto"?"Send to review":"Approve";
+      toggle.onclick=()=>{x.status=x.status==="auto"?"review":"auto";saveLocal();};
+      actions.appendChild(toggle);
+
+      const del=document.createElement("button");
+      del.className="btn danger"; del.textContent="Remove";
+      del.onclick=()=>{localItems=localItems.filter(y=>y.id!==x.id);saveLocal();};
+      actions.appendChild(del);
+    }
+
+    el.appendChild(actions);
+    q.appendChild(el);
+  });
+
+  document.getElementById("queuedCount").textContent=items.length;
+  document.getElementById("approvedCount").textContent=items.filter(x=>x.status==="auto").length;
+  document.getElementById("manualCount").textContent=items.filter(x=>x.status==="review").length;
+  document.getElementById("postedCount").textContent="—";
+  renderFeedbackStatus();
+}
+
+document.getElementById("addBtn").onclick=()=>{
+  const text=document.getElementById("draft").value.trim();
+  if(!text)return;
+  const topic=document.getElementById("category").value;
+  const confidence=Math.max(0,Math.min(100,+document.getElementById("confidence").value||0));
+  const item={id:crypto.randomUUID(),topic,text,confidence,status:statusFor({topic,confidence}),source:"manual-browser"};
+  localItems.unshift(item);
+  document.getElementById("draft").value="";
+  saveLocal();
+};
+
+document.getElementById("copyFeedbackBtn").onclick=async()=>{
+  const data=JSON.stringify(feedback,null,2);
+  try{
+    await navigator.clipboard.writeText(data);
+    document.getElementById("feedbackStatus").textContent=feedback.length+" feedback items copied";
+  }catch(e){
+    prompt("Copy this feedback JSON:",data);
+  }
+};
+
+render();
+loadRemoteQueue();
