@@ -8,6 +8,7 @@ DRY_RUN = os.getenv("DRY_RUN", "true").lower() != "false"
 
 REVIEW_TOPICS = {"politics", "breaking-news"}
 MIN_CONFIDENCE = 85
+NOISE_TERMS = {"friendly","friendlies","football","soccer","head-to-head","h2h","livestream","live stream","watch live","tv channel","gossip"}
 
 def load(path, default):
     if not path.exists():
@@ -21,6 +22,9 @@ def eligible(item, seen):
     text = item.get("text","").strip()
     if not text or len(text) > 280:
         return False, "invalid-length"
+    lowered = text.lower()
+    if any(term in lowered for term in NOISE_TERMS):
+        return False, "noise-filter"
     if item.get("topic") in REVIEW_TOPICS:
         return False, "manual-review-topic"
     if item.get("status") != "auto":
