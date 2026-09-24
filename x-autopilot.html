@@ -42,6 +42,11 @@
         <button class="btn primary" id="addBtn" style="margin-top:14px;width:100%">Add to local queue</button>
       </div>
 
+      <h2 style="margin-top:22px">Learning feedback</h2>
+      <div class="muted">Use Keep / Reject / Engage on queue items. Feedback stays in this browser until you copy it for safe sync to GitHub.</div>
+      <button class="btn secondary" id="copyFeedbackBtn" style="margin-top:12px;width:100%">Copy feedback JSON</button>
+      <div class="muted" id="feedbackStatus" style="margin-top:8px">0 feedback items saved</div>
+
       <h2 style="margin-top:22px">Rules</h2>
       <div class="rules">
         <div class="rule"><span>Minimum confidence</span><strong>85%</strong></div>
@@ -51,7 +56,7 @@
       </div>
     </aside>
   </div>
-  <div class="footer">Publisher Studio · X Autopilot v1 · Queue edits on this page are browser-local. GitHub Actions uses automation/queue.json.</div>
+  <div class="footer">Publisher Studio · X Autopilot v1.1 · Queue and feedback actions on this page are browser-local until safely synced to GitHub.</div>
 </div>
 <script src="./src/x-autopilot.js"></script>
 </body>
