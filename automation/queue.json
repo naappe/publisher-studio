@@ -94,5 +94,41 @@
     "source_url": "https://coloradosun.com",
     "source_title": "Opinion: Colorado should turn artificial intelligence skills into apprenticeships",
     "discovered_at": "Thu, 24 Sep 2026 07:30:00 GMT"
+  },
+  {
+    "id": "disc-14fba81e992d1dc6",
+    "topic": "business",
+    "text": "Worth noting: Malaysian company case to change conflicting Maldives company name denied — edition.mv\nhttps://news.google.com/rss/articles/CBMiU0FVX3lxTFA0SElqOVdVcFRnLVdDNklyVzdLcl82MjczRi1LTTVfWFphcjNmdzFHUFFubE0wTXRxMzBUZGo1SlE0MkMxSk1TV3I4TXkyeV8xeElv?oc=5",
+    "confidence": 92,
+    "status": "auto",
+    "source": "https://news.google.com/rss/articles/CBMiU0FVX3lxTFA0SElqOVdVcFRnLVdDNklyVzdLcl82MjczRi1LTTVfWFphcjNmdzFHUFFubE0wTXRxMzBUZGo1SlE0MkMxSk1TV3I4TXkyeV8xeElv?oc=5",
+    "source_name": "edition.mv",
+    "source_url": "https://edition.mv",
+    "source_title": "Malaysian company case to change conflicting Maldives company name denied",
+    "discovered_at": "Tue, 22 Sep 2026 14:15:19 GMT"
+  },
+  {
+    "id": "disc-0386573457c7733c",
+    "topic": "technology",
+    "text": "Worth noting: Trump wants AI to be rebranded as super intelligence. Will it work? — BBC\nhttps://news.google.com/rss/articles/CBMiW0FVX3lxTFBOZUZJX1V6VHhqMi13UWVncGxhZEhQMW1IMHBPVk1fWEdObG1rcHF1cXlWTjNJVk54NVZjaGVrd2wxV3BBX1FvVWJNTEFkUnZQTHdPNlI3ZzYwNkE?oc=5",
+    "confidence": 92,
+    "status": "auto",
+    "source": "https://news.google.com/rss/articles/CBMiW0FVX3lxTFBOZUZJX1V6VHhqMi13UWVncGxhZEhQMW1IMHBPVk1fWEdObG1rcHF1cXlWTjNJVk54NVZjaGVrd2wxV3BBX1FvVWJNTEFkUnZQTHdPNlI3ZzYwNkE?oc=5",
+    "source_name": "BBC",
+    "source_url": "https://www.bbc.com",
+    "source_title": "Trump wants AI to be rebranded as super intelligence. Will it work?",
+    "discovered_at": "Wed, 23 Sep 2026 03:20:30 GMT"
+  },
+  {
+    "id": "disc-2596a859564da07d",
+    "topic": "finance",
+    "text": "Worth noting: What Is Fintech? Meaning, Applications, Trends, and More — Coursera\nhttps://news.google.com/rss/articles/CBMiXkFVX3lxTE9taGZseUJpR216aHZxR2xneVQxMWVqM0F6bnI2VlVOT3FhR0RERDRvZXJsekROU013SFp5MEg5djRJSEowV0gzY2k3Y21PZHhXQ3ZZd0lEVU1zZXF1SXc?oc=5",
+    "confidence": 92,
+    "status": "auto",
+    "source": "https://news.google.com/rss/articles/CBMiXkFVX3lxTE9taGZseUJpR216aHZxR2xneVQxMWVqM0F6bnI2VlVOT3FhR0RERDRvZXJsekROU013SFp5MEg5djRJSEowV0gzY2k3Y21PZHhXQ3ZZd0lEVU1zZXF1SXc?oc=5",
+    "source_name": "Coursera",
+    "source_url": "https://www.coursera.org",
+    "source_title": "What Is Fintech? Meaning, Applications, Trends, and More",
+    "discovered_at": "Tue, 22 Sep 2026 00:43:00 GMT"
   }
 ]
