@@ -1,0 +1,18 @@
+[
+  {
+    "id": "welcome-1",
+    "topic": "technology",
+    "text": "Building smarter publishing workflows: discover, verify, queue, publish, and learn.",
+    "confidence": 96,
+    "status": "auto",
+    "source": "manual"
+  },
+  {
+    "id": "review-example",
+    "topic": "politics",
+    "text": "Political content stays in manual review and is never auto-published by default.",
+    "confidence": 95,
+    "status": "review",
+    "source": "manual"
+  }
+]
