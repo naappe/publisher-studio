@@ -28,15 +28,18 @@ jobs:
 
       - run: pip install -r requirements.txt
 
+      - name: Learn from feedback
+        run: python automation/learn.py
+
       - name: Discover fresh content
         run: python automation/discover.py
 
-      - name: Save discovered queue items
+      - name: Save learning and discovered queue
         run: |
           git config user.name "x-autopilot-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add automation/queue.json
-          git diff --cached --quiet || git commit -m "X autopilot: discover fresh content"
+          git add automation/interests.json automation/feedback.json automation/queue.json
+          git diff --cached --quiet || git commit -m "X autopilot: learn and discover"
           git push
 
       - name: Run X autopilot
