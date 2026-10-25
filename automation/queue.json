@@ -13217,5 +13217,44 @@
     "source_url": "https://themachinemaker.com",
     "source_title": "L&T Secures Two Major Construction Orders in New Delhi and Andhra Pradesh",
     "discovered_at": "Fri, 23 Oct 2026 12:35:59 GMT"
+  },
+  {
+    "id": "disc-602393fb8f0c25a0",
+    "topic": "general",
+    "interest": "Maldives",
+    "text": "Kalaburagi’s GI-tagged tur dal wins PM’s praise after export to Maldives (The Hindu)",
+    "confidence": 92,
+    "status": "auto",
+    "source": "https://news.google.com/rss/articles/CBMi0gFBVV95cUxNWTB6Z05zNkZqMnR0RUxqdktEWS12UFo1dUZDZDR4Z29wc09QMGVDUEJUUW13RjFvd091aWc1bFhRMWlTaDgyLU92WnpLM0xYU0doa1Fxb3RYSndEcG8xUjFQRlAtN28yRVlDN3BWbjExUmdKOVplby1lSlBIbmJ2ZnZLNDkzb0JhTDlNeERlQzA1WW1WMUpOQm96M1dPbGpMUE9Zc3o4djZkYk1nNTBfWUZVUWdQdlVkZlpOdUJWcHB6OW5BS0diVlVqZDVWVVplT2fSAdgBQVVfeXFMTjh0c0xEcUkzQURiVDN1SmlLek8xM3lEZnMxZGItTnZFUEdRMkxlTE5TWEdkRnJsYndPUW5hLW9nN05ZMlFsdHZ6NExBWVQwTndWOWg1ajhwNkNROXlPMUJvcTEyY2NvelBQeHZzQXpaS3VoQzliLThUVklZMXhNWDEwV200dW1TMVp3cUNZaC1keTg1MV9jQUk4ZE1haGdvUy1NU3lialZtZzJQYVNMMXZ3ckxoQV83TFo3RFNydVU1Q3k0WXJNTzd0ZXhjc0lYcmVmQV8zZTZD?oc=5",
+    "source_name": "The Hindu",
+    "source_url": "https://www.thehindu.com",
+    "source_title": "Kalaburagi’s GI-tagged tur dal wins PM’s praise after export to Maldives",
+    "discovered_at": "Sun, 25 Oct 2026 15:47:59 GMT"
+  },
+  {
+    "id": "disc-4cd7575aca8c3d61",
+    "topic": "technology",
+    "interest": "AI",
+    "text": "Indurex Raises €7M to Bring Engineering Intelligence to Critical Infrastructure and Industrial Operations (AI Insider)",
+    "confidence": 92,
+    "status": "auto",
+    "source": "https://news.google.com/rss/articles/CBMi2wFBVV95cUxNcUlFdFg3VklZLVYzNlpueTNjbGx3emZ3cTNZY2xrLWhlcnY5TVhYclZpeEtUXzR0dGMwMFBQX3k0Nmh1Y0ZZVUFlZ3d2U1pzLWxLaHlUcjhwZDhHNHFrdU5lU3dpQjlrSUdRWmJmSzRPWmpXU1Q3NnRXbENFMXZkeEdYS3c3dms1VXczS2FoQXNCOUdsc1FsMFN0VkNkeUJfcHMxOW05d2hzaF8xWE5fNW90Z0UwOEdHYjVwQVhxSDNaNnVnbWFoaV95Zm5qUkNOQ3dhUVF3RzdnNzg?oc=5",
+    "source_name": "AI Insider",
+    "source_url": "https://theaiinsider.tech",
+    "source_title": "Indurex Raises €7M to Bring Engineering Intelligence to Critical Infrastructure and Industrial Operations",
+    "discovered_at": "Sun, 25 Oct 2026 14:41:27 GMT"
+  },
+  {
+    "id": "disc-e21f69b08aac8085",
+    "topic": "politics",
+    "interest": "AI",
+    "text": "Kenya Champions Responsible Military Artificial Intelligence (AI) to Shape Global Security (Africa.com)",
+    "confidence": 80,
+    "status": "review",
+    "source": "https://news.google.com/rss/articles/CBMisAFBVV95cUxOMDVlMzg3VXdKTmpNX1ZTRzJJVVJhaW1aQm1SM0dzb1htbW56VmNsekE0UmxNX2FaVFdPZmo2Z1dQTVY4ZzdKY2hiYzNyY3YtcXA4Tjd0OERxbFZ0ampPSWhnRTV0cHBhN1VBbXYyVllvMnJPY1FPQ1lnRXo5UVdGWUJMMU9HWlJRS1JKTTEzczRKUnhydDZmZ3ZmNzI4dGgzRDVRYnlQOFlBWV8wVXAzeQ?oc=5",
+    "source_name": "Africa.com",
+    "source_url": "https://africa.com",
+    "source_title": "Kenya Champions Responsible Military Artificial Intelligence (AI) to Shape Global Security",
+    "discovered_at": "Sun, 25 Oct 2026 12:50:41 GMT"
   }
 ]
